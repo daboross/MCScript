@@ -310,13 +310,13 @@ kill_server() {
 
 # Waits until the server is no longer running, then starts it.
 persistent_start() {
-    log "[persistent_start] Starting"
+    log "persistent_start" "Starting"
     disable_script
     while server_running; do
-        log "[persistent_start] Server already running"
+        log "persistent_start" "Server already running"
         sleep 1s
     done
-    log "[persistent_start] Starting server"
+    log "persistent_start" "Starting server"
     pre_start_actions
     tmux new -ds "${NAME}-server" "'$SCRIPT' internal-start"
     enable_script
@@ -324,22 +324,22 @@ persistent_start() {
 
 # Kills the server then starts it
 kill_start() {
-    log "[kill_start] Starting"
+    log "kill_start" "Starting"
     kill_server
     while server_running; do
         sleep 1
     done
     start_server
-    log "[kill_start] Done"
+    log "kill_start" "Done"
     resume
 }
 
 # Starts the server!
 start_server() {
     if server_running; then
-        log "[start_server] Server already running"
+        log "start_server" "Server already running"
     else
-        log "[start_server] Starting server"
+        log "start_server" "Starting server"
         pre_start_actions
         if [[ "$TMUX" ]]; then
             local -r TMUX_BAK="$TMUX"
@@ -374,6 +374,7 @@ internal_start() {
 record_pid_and_start() {
     SERVER_PID="$$"
     echo "$SERVER_PID" > "${HOME}/${NAME}/.server-pid"
+    echo "$@" > "${PID_FILE}-"
     exec "$@"
 }
 

@@ -254,22 +254,22 @@ kill_server() {
 
 # Kills the server then starts it
 kill_start() {
-    log "[kill_start] Starting"
+    log ""kill_start" "Starting"
     kill_server
     while server_running; do
         sleep 1
     done
     start_server
-    log "[kill_start] Done"
+    log "kill_start" "Done"
     resume
 }
 
 # Starts the server!
 start_server() {
     if server_running; then
-        log "[start_server] Server already running"
+        log "start_server" "Server already running"
     else
-        log "[start_server] Starting server"
+        log "start_server" "Starting server"
         if [[ "$TMUX" ]]; then
             local -r TMUX_BAK="$TMUX"
             unset "TMUX"
@@ -293,7 +293,8 @@ internal_start() {
 
 record_pid_and_start() {
     SERVER_PID="$$"
-    echo "$SERVER_PID" > "${HOME}/${NAME}/.server-pid"
+    echo "$SERVER_PID" > "${PID_FILE}"
+    echo "$@" > "${PID_FILE}-"
     exec "$@"
 }
 
