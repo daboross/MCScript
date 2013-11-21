@@ -261,8 +261,7 @@ persistent_start() {
         sleep 1s
     done
     log "[persistent_start] Starting server"
-    tmux new -ds "${NAME}-server" "'$SCRIPT' internal-start"
-    enable_script
+    start_server
 }
 
 # Kills the server then starts it
@@ -283,14 +282,28 @@ start_server() {
         log "[start_server] Server already running"
     else
         log "[start_server] Starting server"
+        if [[ "$TMUX" ]]; then
+            local -r TMUX_BAK="$TMUX"
+            unset "$TMUX"
+        fi
         tmux new -ds "${NAME}-server" "'$SCRIPT' internal-start"
+        if [[ "$TMUX_BAK" ]]; then
+            TMUX="$TMUX_BAK"
+        fi
         enable_script
     fi
 }
 
 # Spigot
 spigot_restart() {
+    if [[ "$TMUX" ]]; then
+        local -r TMUX_BAK="$TMUX"
+        unset "$TMUX"
+    fi
     tmux new -ds "${NAME}-restart" "$SCRIPT persistent_start"
+    if [[ "$TMUX_BAK" ]]; then
+        TMUX="$TMUX_BAK"
+    fi
 }
 
 # Internally used start function
