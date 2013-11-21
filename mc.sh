@@ -476,7 +476,7 @@ main() {
         disable-script)
             disable_script ;;
         update)
-            dowload_latest ;;
+            download_latest ;;
         pre-start-actions)
             pre_start_actions ;;
         kill-server)
