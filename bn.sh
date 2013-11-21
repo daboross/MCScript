@@ -294,7 +294,6 @@ internal_start() {
 record_pid_and_start() {
     SERVER_PID="$$"
     echo "$SERVER_PID" > "${PID_FILE}"
-    echo "$@" > "${PID_FILE}-"
     exec "$@"
 }
 
@@ -425,7 +424,7 @@ main() {
         view-log)
             view_log ;;
         record-pid-and-start)
-            record_pid_and_start ;;
+            record_pid_and_start "$ARGS" ;;
         tell-server)
             tell_server "$ARGS" ;;
         help)
