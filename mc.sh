@@ -212,13 +212,13 @@ boot() {
 get_current_version() {
     local -r JAR_FILE="$SERVER_DIR/jars/spigot.jar"
     local -r MC_VERSION="$(java -jar $JAR_FILE --version 2> /dev/null)"
-    log "[mc-get-version] Current version is $MC_VERSION"
+    log "mc-get-version" "Current version is $MC_VERSION"
     echo "$VERSION"
 }
 
 get_latest_version() {
     local -r LATEST_VERSION="$(curl -s http://ci.md-5.net/job/Spigot/lastBuild/buildNumber)"
-    log "[mc-latest-version] Latest build: $LATEST_VERSION"
+    log "mc-latest-version" "Latest build is $LATEST_VERSION"
     echo "git-Spigot-$LATEST_VERSION"
 }
 
