@@ -254,7 +254,7 @@ kill_server() {
 
 # Kills the server then starts it
 kill_start() {
-    log ""kill_start" "Starting"
+    log "kill_start" "Starting"
     kill_server
     while server_running; do
         sleep 1
