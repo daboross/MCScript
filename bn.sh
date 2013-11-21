@@ -27,7 +27,7 @@ declare -r SERVER_DIR="${HOME}/${NAME}/server"
 
 # XMX and XMS
 declare -r XMX="256m"
-declare -r XMS="$XMX"
+declare -r XMS="128m"
 
 # Backup location to backup to
 declare -r BACKUP_LOCATION="file:///mnt/backup/$(whoami)-${NAME}"
