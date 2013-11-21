@@ -367,7 +367,6 @@ cmd_help() {
 
 main() {
     local -r FUNCTION="$1"
-    local -r ARGS="${@:2}"
     local -r P="[${NAME}]"
     case "$FUNCTION" in
         resume)
@@ -425,11 +424,11 @@ main() {
         view-log)
             view_log ;;
         record-pid-and-start)
-            record_pid_and_start "$ARGS" ;;
+            record_pid_and_start "${@:2}" ;;
         tell-server)
-            tell_server "$ARGS" ;;
+            tell_server "${@:2}" ;;
         help)
-            cmd_help "$ARGS" ;;
+            cmd_help "${@:2}" ;;
         ?*)
             echo "Unknown argument '${1}'"
             cmd_help ;;
