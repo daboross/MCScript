@@ -159,8 +159,8 @@ restart_warning_short() {
 }
 
 # Sends a long 5 minute restart warning to the server
-restart_warning_short() {
-    log "restart_warning_short" "Starting"
+restart_warning_long() {
+    log "restart_warning_long" "Starting"
     if server_running; then
         tell_server 'say Warning! Restarting in 5 minutes!'
         sleep 1m
@@ -181,7 +181,7 @@ restart_warning_short() {
             fi
         fi
     fi
-    log "restart_warning_short" "Done"
+    log "restart_warning_long" "Done"
 }
 
 # Backs up the server
@@ -211,7 +211,7 @@ boot() {
 
 get_current_version() {
     local -r JAR_FILE="$SERVER_DIR/jars/spigot.jar"
-    local -r MC_VERSION="$(java -jar $JAR_FILE --version)"
+    local -r MC_VERSION="$(java -jar $JAR_FILE --version 2> /dev/null)"
     log "[mc-get-version] Current version is $MC_VERSION"
     echo "$VERSION"
 }
