@@ -218,7 +218,7 @@ boot() {
 }
 
 get_current_version() {
-    local -r JAR_FILE="$SERVER_DIR/jars/spigot.jar"
+    local -r JAR_FILE="${HOME}/${NAME}/jars/spigot.jar"
     local -r SERVER_VERSION="$(java -jar $JAR_FILE --version 2> /dev/null)"
     log "get-version" "Current version is $SERVER_VERSION"
     echo "$SERVER_VERSION"

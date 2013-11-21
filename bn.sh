@@ -284,7 +284,7 @@ start_server() {
 
 # Internally used start function
 internal_start() {
-    local -r JAR_FILE="$SERVER_DIR/jars/BungeeCord.jar"
+    local -r JAR_FILE="${HOME}/${NAME}/jars/BungeeCord.jar"
     log "internal_start" "Running with jar ${JAR_FILE}, xms ${XMS}, xmx ${XMX}"
     cd "$SERVER_DIR"
     "${SCRIPT}" record-pid-and-start java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
