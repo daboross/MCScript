@@ -124,7 +124,7 @@ log_migrate() {
 tell_server() {
     log "tell_server" "Running $@"
     local -i NUM=0
-    while [[ NUM < 50 ]]; do
+    while [[ "$NUM" -lt 50 ]]; do
         NUM="$((NUM + 1))"
         tmux send-keys -t "${NAME}-server" "BSpace"
     done
