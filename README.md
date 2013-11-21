@@ -1,15 +1,12 @@
-MinecraftServerScripts
-======================
+MCScript
+========
 
-Newlanders's Minecraft Server Scripts
+Minecraft server management script.
 
-General Idea
-============
-MinecraftServerScripts are some scripts that make server administration a bit easier for us who are on linux systems.
+`mc.sh` is a script that makes server administration a bit easier on linux systems.
 
-They are written in bash, I wrote them for my own minecraft server.
+It is written in bash, and contains a handful of functions.
 
-Then I decided that they might be useful, so I put them here.
+You can put it whereever you want, and configure it with the variables in the top of the script. I generally have one script per server.
 
-Just copy the file 'mc.sh' to where you want, add `alias mc='/home/whatever/wherever/mc.sh'` to your .bashrc and start using it.
-Just using the command `mc` will result in a help message.
+It is not complete at the moment, so I wouldn't use it in a production environment without testing.

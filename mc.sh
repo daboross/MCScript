@@ -18,7 +18,6 @@
 #
 # ### TODO ###
 # * Grab PID and fix server_running
-# * Make a unified storage file to store PID and fix server_running.
 
 ### Configuration ###
 
@@ -487,8 +486,10 @@ main() {
             view_log ;;
         help)
             cmd_help ;;
-        *)
+        ?*)
             echo "$P Unknown argument '${1}'"
+            cmd_help ;;
+        *)
             cmd_help ;;
     esac
 }
