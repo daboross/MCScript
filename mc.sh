@@ -186,12 +186,12 @@ restart_warning_long() {
 
 # Backs up the server
 backup() {
-    log "mc_backup" "Starting"
+    log "backup" "Starting"
     duplicity --no-encryption \
         --name "${NAME}" \
         --full-if-older-than 1W \
         "$STUFF_TO_BACKUP" "$BACKUP_LOCATION" 2>&1 | log_stdin "backup-duplicity-output"
-    log "mc_backup" "Done"
+    log "backup" "Done"
 }
 
 backup_script() {
@@ -205,20 +205,20 @@ backup_script() {
 }
 
 boot() {
-    log "mc-boot" "Running"
+    log "boot" "Running"
     start_server
 }
 
 get_current_version() {
     local -r JAR_FILE="$SERVER_DIR/jars/spigot.jar"
-    local -r MC_VERSION="$(java -jar $JAR_FILE --version 2> /dev/null)"
-    log "mc-get-version" "Current version is $MC_VERSION"
-    echo "$VERSION"
+    local -r SERVER_VERSION="$(java -jar $JAR_FILE --version 2> /dev/null)"
+    log "get-version" "Current version is $SERVER_VERSION"
+    echo "$SERVER_VERSION"
 }
 
 get_latest_version() {
     local -r LATEST_VERSION="$(curl -s http://ci.md-5.net/job/Spigot/lastBuild/buildNumber)"
-    log "mc-latest-version" "Latest build is $LATEST_VERSION"
+    log "latest-version" "Latest build is $LATEST_VERSION"
     echo "git-Spigot-$LATEST_VERSION"
 }
 
@@ -305,7 +305,7 @@ persistent_start() {
     log "[persistent_start] Starting"
     disable_script
     while server_running; do
-        mc "[persistent_start] Server already running"
+        log "[persistent_start] Server already running"
         sleep 1s
     done
     log "[persistent_start] Starting server"
