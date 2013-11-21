@@ -126,7 +126,7 @@ log_migrate() {
 
 # Sends keystrokes to the server session
 tell_server() {
-    if !tmux has-session -t "${NAME}-server" &>/dev/null; then
+    if ! tmux has-session -t "${NAME}-server" &>/dev/null; then
         log "tell_server" "Can't tell server because server has no session"
         return
     fi
