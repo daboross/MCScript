@@ -16,8 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# ### TODO ###
-# * Grab PID and fix server_running
 
 ### Configuration ###
 
@@ -41,6 +39,10 @@ declare -r STUFF_TO_BACKUP="${HOME}/${NAME}"
 
 # Set THIS to be this script.
 declare -r SCRIPT="$([[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}")"
+
+# Storage vars
+declare -r PID_FILE="${HOME}/${NAME}/.server-pid"
+declare -r SCRIPT_DISABLE_FILE="${HOME}/${NAME}/.script-disabled"
 
 ### Script Functions ###
 
@@ -77,10 +79,9 @@ log() {
 # Tests if the server is running
 # stdout - true if running
 server_running() {
-    [[ "$(pgrep -xu $(id -u) java)" ]] && return 0 || return 1
-    # new
-    #local -r SERVER_PID="$(cat ${HOME}/${NAME}/.server-pid)"
-    #kill -s 0 "$SERVER_PID" &> /dev/null && return 0 || return 1
+    [[ -a "$PID_FILE" ]] || return 1
+    local -r SERVER_PID="$(cat ${PID_FILE})"
+    kill -s 0 "$SERVER_PID" &> /dev/null && return 0 || return 1
 }
 
 # Runs the server script
@@ -222,22 +223,23 @@ get_latest_version() {
 }
 
 script_enabled() {
-    [[ -a "${HOME}/${NAME}/.script-disabled" ]] && return 1 || return 0
+    [[ -a "$SCRIPT_DISABLED_FILE" ]] && return 1 || return 0
 }
 
 disable_script() {
-    if [[ -a "$HOME/${NAME}/.script-disabled" ]]; then
+    if [[ -a "$SCRIPT_DISABLED_FILE" ]]; then
         log "disable_script" "Script already disabled"
     else
         log "disable_script" "Disabling script"
-        touch "$HOME/${NAME}/.script-disabled"
+        mkdir -p "$(dirname ${SCRIPT_DISABLED_FILE})"
+        touch "$SCRIPT_DISABLED_FILE"
     fi
 }
 
 enable_script() {
-    if [[ -a "$HOME/${NAME}/.script-disabled" ]]; then
+    if [[ -a "$SCRIPT_DISABLED_FILE" ]]; then
         log "enable_script" "Enabling script"
-        rm -f "$HOME/${NAME}/.script-disabled"
+        rm -f "$SCRIPT_DISABLED_FILE"
     else
         log "enable_script" "Script already enabled"
     fi
@@ -260,7 +262,7 @@ download_latest() {
             log "download_latest" "Downloaded jar corrupt"
             log "download_latest" "Downloading..."
             wget "$UPDATE_URL" -O "$NEW_JAR"
-            IS_VALID_JAR="`java -jar $HOME/jars/spigot.jar.new --version`"
+            IS_VALID_JAR="`java -jar $NEW_JAR --version`"
             ATTEMPTS="$((ATTEMPTS + 1))"
         done
         if [[ "$IS_VALID_JAR" ]]; then
@@ -288,12 +290,14 @@ pre_start_actions() {
 
 # Kills the server
 kill_server() {
-    log "[kill_server] Starting"
-    killall -u "$(whoami)" -9 java
+    log "kill_server" "Starting"
+    local -r SERVER_PID="$(cat ${PID_FILE})"
+    log "kill_server" "Killing $SERVER_PID"
+    kill -9 "$SERVER_PID"
     if [[ -a "$SERVER_DIR/server.log.lck" ]]; then
         rm -f "$SERVER_DIR/server.log.lck"
     fi
-    log "[kill_server] Done"
+    log "kill_server" "Done"
 }
 
 # Waits until the server is no longer running, then starts it.
@@ -306,7 +310,7 @@ persistent_start() {
     done
     log "[persistent_start] Starting server"
     pre_start_actions
-    tmux new -ds "${NAME}-server" "$SCRIPT internal_start"
+    tmux new -ds "${NAME}-server" "'$SCRIPT' internal-start"
     enable_script
 }
 
@@ -329,7 +333,7 @@ start_server() {
     else
         log "[start_server] Starting server"
         pre_start_actions
-        tmux new -ds "${NAME}-server" "$SCRIPT internal_start"
+        tmux new -ds "${NAME}-server" "'$SCRIPT' internal-start"
         enable_script
     fi
 }
@@ -344,8 +348,14 @@ internal_start() {
     local -r JAR_FILE="$SERVER_DIR/jars/spigot.jar"
     log "internal_start" "Running with jar ${JAR_FILE}, xms ${XMS}, xmx ${XMX}"
     cd "$SERVER_DIR"
-    java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
+    "${SCRIPT}" record-pid-and-start java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
     log "internal_start" "Done"
+}
+
+record_pid_and_start() {
+    SERVER_PID="$$"
+    echo "$SERVER_PID" > "${HOME}/${NAME}/.server-pid"
+    exec "$@"
 }
 
 # Stops the server
@@ -403,18 +413,21 @@ cmd_help() {
     echo " script-enabled - Checks if the check-script is enabled"
     echo " enable-script  - Enables the check-script"
     echo " disable-script - Disable the check-script"
-    echo " ---- Internally used / debug commands ----"
-    echo " update - Downloads the latest spigot version"
-    echo " current-version   - Gets the current version of the server"
-    echo " latest-version    - Gets the latest spigot version"
-    echo " warning-long      - Restart warning long"
-    echo " warning-short     - Restart warning short"
-    echo " log-migrate       - Migrates the server log"
-    echo " boot              - Script to run at boot"
-    echo " spigot-restart    - Spigot restart script"
-    echo " internal-start    - Internal start script"
-    echo " persistent-start  - Waits till the server isn't running, then starts"
-    echo " pre-start-actions - Runs server pre-start actions"
+    if [[ "$1" == "--internal" ]]; then
+        echo " ---- Internally used / debug commands ----"
+        echo " update - Downloads the latest spigot version"
+        echo " current-version   - Gets the current version of the server"
+        echo " latest-version    - Gets the latest spigot version"
+        echo " warning-long      - Restart warning long"
+        echo " warning-short     - Restart warning short"
+        echo " log-migrate       - Migrates the server log"
+        echo " boot              - Script to run at boot"
+        echo " spigot-restart    - Spigot restart script"
+        echo " internal-start    - Internal start script"
+        echo " persistent-start  - Waits till the server isn't running, then starts"
+        echo " pre-start-actions - Runs server pre-start actions"
+        echo " record-pid-and-start - Starts a process and records the PID as the server PID"
+    fi
 }
 
 main() {
@@ -484,8 +497,10 @@ main() {
             stop_start ;;
         view-log)
             view_log ;;
+        record-pid-and-start)
+            record_pid_and_start ;;
         help)
-            cmd_help ;;
+            cmd_help "$ARGS" ;;
         ?*)
             echo "$P Unknown argument '${1}'"
             cmd_help ;;
