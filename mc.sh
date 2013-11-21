@@ -48,7 +48,7 @@ declare -r SCRIPT_DISABLE_FILE="${HOME}/${NAME}/.script-disabled"
 
 # Resumes the server session
 resume() {
-    tmux attach "${NAME}-server"
+    tmux attach -t "${NAME}-server"
 }
 
 # Gets the current log file
@@ -439,10 +439,10 @@ main() {
             resume ;;
         status)
             if server_running; then
-                echo "$P Running!"
+                echo "Server $NAME running!"
                 return 0
             else
-                echo "$P Not running."
+                echo "Server $NAME not running."
                 return 1
             fi ;;
         check-script)
@@ -465,10 +465,10 @@ main() {
             get_latest_version ;;
         script-enabled)
             if script_enabled; then
-                echo "$P Script enabled"
+                echo "Script is enabled"
                 return 0
             else
-                echo "$P Script disabled"
+                echo "Script is disabled"
                 return 1
             fi ;;
         enable-script)
@@ -502,7 +502,7 @@ main() {
         help)
             cmd_help "$ARGS" ;;
         ?*)
-            echo "$P Unknown argument '${1}'"
+            echo "Unknown argument '${1}'"
             cmd_help ;;
         *)
             cmd_help ;;
