@@ -415,19 +415,20 @@ cmd_help() {
     echo " disable-script - Disable the check-script"
     if [[ "$1" == "--internal" ]]; then
         echo " ---- Internally used / debug commands ----"
-        echo " update - Downloads the latest spigot version"
-        echo " current-version   - Gets the current version of the server"
-        echo " latest-version    - Gets the latest spigot version"
-        echo " warning-long      - Restart warning long"
-        echo " warning-short     - Restart warning short"
-        echo " log-migrate       - Migrates the server log"
-        echo " boot              - Script to run at boot"
-        echo " spigot-restart    - Spigot restart script"
-        echo " internal-start    - Internal start script"
-        echo " persistent-start  - Waits till the server isn't running, then starts"
-        echo " pre-start-actions - Runs server pre-start actions"
+        echo " update               - Downloads the latest spigot version"
+        echo " current-version      - Gets the current version of the server"
+        echo " latest-version       - Gets the latest spigot version"
+        echo " warning-long         - Restart warning long"
+        echo " warning-short        - Restart warning short"
+        echo " log-migrate          - Migrates the server log"
+        echo " boot                 - Script to run at boot"
+        echo " spigot-restart       - Spigot restart script"
+        echo " internal-start       - Internal start script"
+        echo " persistent-start     - Waits till the server isn't running, then starts"
+        echo " pre-start-actions    - Runs server pre-start actions"
         echo " record-pid-and-start - Starts a process and records the PID as the server PID"
-    fi
+        echo " tell-server          - Sends keystrokes to the server session"
+     fi
 }
 
 main() {
@@ -499,6 +500,8 @@ main() {
             view_log ;;
         record-pid-and-start)
             record_pid_and_start ;;
+        tell-server)
+            tell_server "$ARGS" ;;
         help)
             cmd_help "$ARGS" ;;
         ?*)
