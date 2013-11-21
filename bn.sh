@@ -42,7 +42,7 @@ declare -r SCRIPT="$([[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}")"
 
 # Storage vars
 declare -r PID_FILE="${HOME}/${NAME}/.server-pid"
-declare -r SCRIPT_DISABLE_FILE="${HOME}/${NAME}/.script-disabled"
+declare -r SCRIPT_DISABLED_FILE="${HOME}/${NAME}/.script-disabled"
 
 ### Script Functions ###
 
@@ -245,7 +245,7 @@ kill_server() {
     log "kill_server" "Starting"
     local -r SERVER_PID="$(cat ${PID_FILE})"
     log "kill_server" "Killing $SERVER_PID"
-    kill -9 "$SERVER_PID"
+    kill -9 "$SERVER_PID" &> /dev/null
     if [[ -a "$SERVER_DIR/server.log.lck" ]]; then
         rm -f "$SERVER_DIR/server.log.lck"
     fi

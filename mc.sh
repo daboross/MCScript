@@ -42,7 +42,7 @@ declare -r SCRIPT="$([[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}")"
 
 # Storage vars
 declare -r PID_FILE="${HOME}/${NAME}/.server-pid"
-declare -r SCRIPT_DISABLE_FILE="${HOME}/${NAME}/.script-disabled"
+declare -r SCRIPT_DISABLED_FILE="${HOME}/${NAME}/.script-disabled"
 
 ### Script Functions ###
 
@@ -256,8 +256,8 @@ enable_script() {
 download_latest() {
     local -r CURRENT_VERSION="$(get_current_version)"
     local -r LATEST_VERSION="$(get_latest_version)"
-    local -r NEW_JAR="$SERVER_DIR/jars/spigot.jar.new"
-    local -r FINAL_JAR="$SERVER_DIR/jars/spigot.jar"
+    local -r NEW_JAR="${HOME}/${NAME}/jars/spigot.jar.new"
+    local -r FINAL_JAR="${HOME}/${NAME}/jars/spigot.jar"
     local -r UPDATE_URL="http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar"
     if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
         log "download_latest" "Server outdated"
@@ -301,7 +301,7 @@ kill_server() {
     log "kill_server" "Starting"
     local -r SERVER_PID="$(cat ${PID_FILE})"
     log "kill_server" "Killing $SERVER_PID"
-    kill -9 "$SERVER_PID"
+    kill -9 "$SERVER_PID" &> /dev/null
     if [[ -a "$SERVER_DIR/server.log.lck" ]]; then
         rm -f "$SERVER_DIR/server.log.lck"
     fi
@@ -317,9 +317,7 @@ persistent_start() {
         sleep 1s
     done
     log "persistent_start" "Starting server"
-    pre_start_actions
-    tmux new -ds "${NAME}-server" "'$SCRIPT' internal-start"
-    enable_script
+    start_server
 }
 
 # Kills the server then starts it
@@ -346,6 +344,9 @@ start_server() {
             unset "TMUX"
         fi
         tmux new -ds "${NAME}-server" "'$SCRIPT' internal-start"
+        if [[ "$TMUX_BAK" ]]; then
+            TMUX="$TMUX_BAK"
+        fi
         enable_script
     fi
 }
@@ -364,7 +365,7 @@ spigot_restart() {
 
 # Internally used start function
 internal_start() {
-    local -r JAR_FILE="$SERVER_DIR/jars/spigot.jar"
+    local -r JAR_FILE="${HOME}/${NAME}/jars/spigot.jar"
     log "internal_start" "Running with jar ${JAR_FILE}, xms ${XMS}, xmx ${XMX}"
     cd "$SERVER_DIR"
     "${SCRIPT}" record-pid-and-start java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
@@ -373,7 +374,7 @@ internal_start() {
 
 record_pid_and_start() {
     SERVER_PID="$$"
-    echo "$SERVER_PID" > "${HOME}/${NAME}/.server-pid"
+    echo "$SERVER_PID" > "${PID_FILE}"
     log "record-start" "Starting '$@' with pid $SERVER_PID"
     exec "$@"
 }
