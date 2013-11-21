@@ -374,7 +374,7 @@ internal_start() {
 record_pid_and_start() {
     SERVER_PID="$$"
     echo "$SERVER_PID" > "${HOME}/${NAME}/.server-pid"
-    echo "$@" > "${PID_FILE}-command"
+    log "record-start" "Starting '$@' with pid $SERVER_PID"
     exec "$@"
 }
 
