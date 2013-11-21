@@ -252,18 +252,6 @@ kill_server() {
     log "kill_server" "Done"
 }
 
-# Waits until the server is no longer running, then starts it.
-persistent_start() {
-    log "[persistent_start] Starting"
-    disable_script
-    while server_running; do
-        log "[persistent_start] Server already running"
-        sleep 1s
-    done
-    log "[persistent_start] Starting server"
-    start_server
-}
-
 # Kills the server then starts it
 kill_start() {
     log "[kill_start] Starting"
@@ -294,21 +282,9 @@ start_server() {
     fi
 }
 
-# Spigot
-spigot_restart() {
-    if [[ "$TMUX" ]]; then
-        local -r TMUX_BAK="$TMUX"
-        unset "TMUX"
-    fi
-    tmux new -ds "${NAME}-restart" "$SCRIPT persistent_start"
-    if [[ "$TMUX_BAK" ]]; then
-        TMUX="$TMUX_BAK"
-    fi
-}
-
 # Internally used start function
 internal_start() {
-    local -r JAR_FILE="$SERVER_DIR/jars/spigot.jar"
+    local -r JAR_FILE="$SERVER_DIR/jars/BungeeCord.jar"
     log "internal_start" "Running with jar ${JAR_FILE}, xms ${XMS}, xmx ${XMX}"
     cd "$SERVER_DIR"
     "${SCRIPT}" record-pid-and-start java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
@@ -381,9 +357,7 @@ cmd_help() {
         echo " warning-short        - Restart warning short"
         echo " log-migrate          - Migrates the server log"
         echo " boot                 - Script to run at boot"
-        echo " spigot-restart       - Spigot restart script"
         echo " internal-start       - Internal start script"
-        echo " persistent-start     - Waits till the server isn't running, then starts"
         echo " pre-start-actions    - Runs server pre-start actions"
         echo " record-pid-and-start - Starts a process and records the PID as the server PID"
         echo " tell-server          - Sends keystrokes to the server session"
