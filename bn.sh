@@ -48,7 +48,11 @@ declare -r SCRIPT_DISABLE_FILE="${HOME}/${NAME}/.script-disabled"
 
 # Resumes the server session
 resume() {
-    tmux attach -t "${NAME}-server"
+    if tmux has-session -t "${NAME}-server" &>/dev/null; then
+        tmux attach -t "${NAME}-server"
+    else
+        echo "No server session exists"
+    fi
 }
 
 # Gets the current log file
@@ -122,6 +126,10 @@ log_migrate() {
 
 # Sends keystrokes to the server session
 tell_server() {
+    if !tmux has-session -t "${NAME}-server" &>/dev/null; then
+        log "tell_server" "Can't tell server because server has no session"
+        return
+    fi
     log "tell_server" "Running $@"
     local -i NUM=0
     while [[ "$NUM" -lt 50 ]]; do
