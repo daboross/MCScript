@@ -461,9 +461,9 @@ main() {
         boot)
             boot ;;
         current-version)
-            get_current_version ;;
+            echo "Current version is '$(get_current_version)'" ;;
         latest-version)
-            get_latest_version ;;
+            echo "Latest version is '$(get_latest_version)'" ;;
         script-enabled)
             if script_enabled; then
                 echo "Script is enabled"
