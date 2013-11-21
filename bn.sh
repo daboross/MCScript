@@ -284,7 +284,7 @@ start_server() {
         log "[start_server] Starting server"
         if [[ "$TMUX" ]]; then
             local -r TMUX_BAK="$TMUX"
-            unset "$TMUX"
+            unset "TMUX"
         fi
         tmux new -ds "${NAME}-server" "'$SCRIPT' internal-start"
         if [[ "$TMUX_BAK" ]]; then
@@ -298,7 +298,7 @@ start_server() {
 spigot_restart() {
     if [[ "$TMUX" ]]; then
         local -r TMUX_BAK="$TMUX"
-        unset "$TMUX"
+        unset "TMUX"
     fi
     tmux new -ds "${NAME}-restart" "$SCRIPT persistent_start"
     if [[ "$TMUX_BAK" ]]; then
