@@ -1,5 +1,4 @@
 language: sh
 install:
-- wget https://raw.github.com/daboross/bash-test-script/master/test-single.sh -O test.sh
-- chmod 755 test.sh
+- wget https://raw.github.com/daboross/bash-test-script/master/test-single.sh -O test.sh && chmod 755 test.sh
 script: ./test.sh mc.sh
