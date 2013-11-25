@@ -373,7 +373,6 @@ internal_start() {
     echo "$SERVER_PID" > "$PID_FILE"
     log "record-start" "Starting '$@' with pid $SERVER_PID"
     exec java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
-
 }
 
 # Stops the server
