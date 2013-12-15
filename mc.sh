@@ -30,7 +30,7 @@ declare -r XMX="1G"
 declare -r XMS="512m"
 
 # Backup location to backup to
-declare -r BACKUP_LOCATION="file:///mnt/backup/$(whoami)-${NAME}"
+declare -r BACKUP_LOCATION="scp://username@host/backups/${NAME}/"
 
 # Folder to backup
 declare -r STUFF_TO_BACKUP="${HOME}/${NAME}"
@@ -70,8 +70,8 @@ get_log() {
 # stdin - stuff to log
 log_stdin() {
     local -r LOG_NAME="$1"
-    local -r PREFIX="$(echo $(date +'%Y/%m/%d %H:%M') [${LOG_NAME}] | sed -e 's/[\/&]/\\&/g') -"
-    sed -e 's/^/${PREFIX}/g' - >> "$(get_log)"
+    local -r PREFIX="$(echo $(date +'%Y/%m/%d %H:%M') [${LOG_NAME}] | sed -e 's/[\/&]/\\&/g') "
+    sed -e "s/^/${PREFIX}/g" >> "$(get_log)"
 }
 
 # Logs something to the log file
@@ -196,9 +196,10 @@ restart_warning_long() {
 # Backs up the server
 backup() {
     log "backup" "Starting"
-    duplicity --no-encryption \
-        --name "${NAME}" \
+    duplicity --name "${NAME}" \
+        --no-encryption \
         --full-if-older-than 1W \
+        --log-fd 1 \
         "$STUFF_TO_BACKUP" "$BACKUP_LOCATION" 2>&1 | log_stdin "backup-duplicity-output"
     log "backup" "Done"
 }
@@ -371,7 +372,7 @@ internal_start() {
     cd "$SERVER_DIR"
     local -r SERVER_PID="$$"
     echo "$SERVER_PID" > "$PID_FILE"
-    log "record-start" "Starting '$@' with pid $SERVER_PID"
+    log "internal_start" "Starting with pid $SERVER_PID"
     exec java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
 }
 
