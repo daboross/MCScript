@@ -70,7 +70,7 @@ get_log() {
 # stdin - stuff to log
 log_stdin() {
     local -r LOG_NAME="$1"
-    local -r PREFIX="$(echo $(date +'%Y/%m/%d %H:%M') [${LOG_NAME}] | sed -e 's/[\/&]/\\&/g') "
+    local -r PREFIX="$(echo "$(date '+%Y/%m/%d %H:%M') [${LOG_NAME}] " | sed -e 's/[\/&]/\\&/g')"
     sed -e "s/^/${PREFIX}/g" >> "$(get_log)"
 }
 
