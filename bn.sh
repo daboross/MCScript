@@ -70,8 +70,8 @@ get_log() {
 # stdin - stuff to log
 log_stdin() {
     local -r LOG_NAME="$1"
-    local -r PREFIX="$(echo $(date +'%Y/%m/%d %H:%M') [${LOG_NAME}] | sed -e 's/[\/&]/\\&/g') -"
-    sed -e 's/^/${PREFIX}/g' - >> "$(get_log)"
+    local -r PREFIX="$(echo "$(date '+%Y/%m/%d %H:%M') [${LOG_NAME}] " | sed -e 's/[\/&]/\\&/g')"
+    sed -e "s/^/${PREFIX}/g" >> "$(get_log)"
 }
 
 # Logs something to the log file
@@ -197,9 +197,10 @@ restart_warning_long() {
 # Backs up the server
 backup() {
     log "backup" "Starting"
-    duplicity --no-encryption \
-        --name "${NAME}" \
+    duplicity --name "${NAME}" \
+        --no-encryption \
         --full-if-older-than 1W \
+        --log-fd 1 \
         "$STUFF_TO_BACKUP" "$BACKUP_LOCATION" 2>&1 | log_stdin "backup-duplicity-output"
     log "backup" "Done"
 }
@@ -207,7 +208,7 @@ backup() {
 backup_script() {
     log "backup_script" "Starting"
     disable_script
-    restart_warning_long
+    restart_warning_short
     stop_server
     backup
     start_server
