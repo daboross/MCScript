@@ -70,8 +70,8 @@ get_log() {
 # stdin - stuff to log
 log_stdin() {
     local -r LOG_NAME="$1"
-    local -r PREFIX="$(echo $(date +'%Y/%m/%d %H:%M') [${LOG_NAME}] | sed -e 's/[\/&]/\\&/g') -"
-    sed -e 's/^/${PREFIX}/g' - >> "$(get_log)"
+    local -r PREFIX="$(echo "$(date '+%Y/%m/%d %H:%M') [${LOG_NAME}] " | sed -e 's/[\/&]/\\&/g')"
+    sed -e "s/^/${PREFIX}/g" >> "$(get_log)"
 }
 
 # Logs something to the log file
@@ -197,9 +197,10 @@ restart_warning_long() {
 # Backs up the server
 backup() {
     log "backup" "Starting"
-    duplicity --no-encryption \
-        --name "${NAME}" \
+    duplicity --name "${NAME}" \
+        --no-encryption \
         --full-if-older-than 1W \
+        --log-fd 1 \
         "$STUFF_TO_BACKUP" "$BACKUP_LOCATION" 2>&1 | log_stdin "backup-duplicity-output"
     log "backup" "Done"
 }
@@ -207,7 +208,7 @@ backup() {
 backup_script() {
     log "backup_script" "Starting"
     disable_script
-    restart_warning_long
+    restart_warning_short
     stop_server
     backup
     start_server
@@ -289,15 +290,10 @@ internal_start() {
     local -r JAR_FILE="${HOME}/${NAME}/jars/BungeeCord.jar"
     log "internal_start" "Running with jar ${JAR_FILE}, xms ${XMS}, xmx ${XMX}"
     cd "$SERVER_DIR"
-    "${SCRIPT}" record-pid-and-start java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
-    log "internal_start" "Done"
-}
-
-record_pid_and_start() {
-    SERVER_PID="$$"
-    echo "$SERVER_PID" > "${PID_FILE}"
+    local -r SERVER_PID="$$"
+    echo "$SERVER_PID" > "$PID_FILE"
     log "record-start" "Starting '$@' with pid $SERVER_PID"
-    exec "$@"
+    exec java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
 }
 
 # Stops the server
@@ -362,7 +358,6 @@ cmd_help() {
         echo " boot                 - Script to run at boot"
         echo " internal-start       - Internal start script"
         echo " pre-start-actions    - Runs server pre-start actions"
-        echo " record-pid-and-start - Starts a process and records the PID as the server PID"
         echo " tell-server          - Sends keystrokes to the server session"
      fi
 }
@@ -425,8 +420,6 @@ main() {
             stop_start ;;
         view-log)
             view_log ;;
-        record-pid-and-start)
-            record_pid_and_start "${@:2}" ;;
         tell-server)
             tell_server "${@:2}" ;;
         help)
