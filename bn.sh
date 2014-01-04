@@ -30,7 +30,7 @@ declare -r XMX="256m"
 declare -r XMS="128m"
 
 # Backup location to backup to
-declare -r BACKUP_LOCATION="file:///mnt/backup/$(whoami)-${NAME}"
+declare -r BACKUP_LOCATION="scp://username@host/backups/${NAME}/"
 
 # Folder to backup
 declare -r STUFF_TO_BACKUP="${HOME}/${NAME}"
