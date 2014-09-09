@@ -20,14 +20,13 @@
 ### Configuration ###
 
 # Name of the script - to have unique scripts
-declare -r NAME="mainserver"
+declare -r NAME="SERVER_NAME"
 
 # Server directory - where the minecraft server is stored
 declare -r SERVER_DIR="${HOME}/${NAME}/server"
 
-# XMX and XMS
+# XMX
 declare -r XMX="1G"
-declare -r XMS="512m"
 
 # Backup location to backup to
 declare -r BACKUP_LOCATION="scp://username@host/backups/${NAME}/"
@@ -101,27 +100,6 @@ server_script() {
     else
         log "server_script" "Script disabled"
     fi
-}
-
-# Migrates the server.log file to
-log_migrate() {
-    local -r SERVER_LOG="${SERVER_DIR}/server.log"
-    local -r ARCHIVE_DIR="${HOME}/${NAME}/log-archives"
-    mkdir -p "$ARCHIVE_DIR"
-    local -r CURRENT_DATE="$(date +%Y-%m-%d)"
-    local ARCHIVE_FILE="$ARCHIVE_DIR/${CURRENT_DATE}.log.gz"
-    if [[ -a "$ARCHIVE_FILE" ]]; then
-        log "log_migrate" "${ARCHIVE_FILE} already exists"
-        local FILE_NUM='1'
-        ARCHIVE_FILE="${ARCHIVE_DIR}/${CURRENT_DATE}-${FILE_NUM}.log.gz"
-        while [[ -a "$ARCHIVE_FILE" ]]; do
-            FILE_NUM="$((FILE_NUM + 1))"
-            ARCHIVE_FILE="$ARCHIVE_DIR/${CURRENT_DATE}-${FILE_NUM}.log.gz"
-        done
-    fi
-    log "log_migrate" "Migrating log to $ARCHIVE_FILE"
-    gzip -c "$SERVER_LOG" > "$ARCHIVE_FILE"
-    > "$SERVER_LOG"
 }
 
 # Sends keystrokes to the server session
@@ -220,16 +198,20 @@ boot() {
 }
 
 get_current_version() {
-    local -r JAR_FILE="${HOME}/${NAME}/jars/spigot.jar"
-    local -r SERVER_VERSION="$(java -jar $JAR_FILE --version 2> /dev/null)"
+    local -r VERSION_FILE="${HOME}/${NAME}/jars/.glowstone.jar-version"
+    if [[ -e "$VERSION_FILE" ]]; then
+        local -r SERVER_VERSION="$(cat "$VERSION_FILE")"
+    else
+        local -r SERVER_VERSION="n/a"
+    fi
     log "get-version" "Current version is $SERVER_VERSION"
     echo "$SERVER_VERSION"
 }
 
 get_latest_version() {
-    local -r LATEST_VERSION="$(curl -s http://ci.md-5.net/job/Spigot/lastBuild/buildNumber)"
+    local -r LATEST_VERSION="$(curl -s http://ci.chrisgward.com/job/Glowstone/lastBuild/buildNumber)"
     log "latest-version" "Latest build is $LATEST_VERSION"
-    echo "git-Spigot-$LATEST_VERSION"
+    echo "$LATEST_VERSION"
 }
 
 script_enabled() {
@@ -256,22 +238,24 @@ enable_script() {
 }
 
 download_latest() {
+    local -r VERSION_FILE="${HOME}/${NAME}/jars/.glowstone.jar-version"
     local -r CURRENT_VERSION="$(get_current_version)"
     local -r LATEST_VERSION="$(get_latest_version)"
-    local -r NEW_JAR="${HOME}/${NAME}/jars/spigot.jar.new"
-    local -r FINAL_JAR="${HOME}/${NAME}/jars/spigot.jar"
-    local -r UPDATE_URL="http://ci.md-5.net/job/Spigot/lastSuccessfulBuild/artifact/Spigot-Server/target/spigot.jar"
+    local -r NEW_JAR="${HOME}/${NAME}/jars/glowstone.jar.new"
+    local -r FINAL_JAR="${HOME}/${NAME}/jars/glowstone.jar"
+    local -r UPDATE_URL="http://ci.chrisgward.com/job/Glowstone/lastSuccessfulBuild/artifact/build/distributions/glowstone-0.0.1-SNAPSHOT.jar"
     if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
         log "download_latest" "Server outdated"
         log "download_latest" "Downloading..."
-        wget "$UPDATE_URL" -O "$NEW_JAR"
+        mkdir -p "$(dirname "$NEW_JAR")"
+        wget "$UPDATE_URL" -O "$NEW_JAR" 2>&1 | log_stdin "download_latest_wget"
         local IS_VALID_JAR="$(java -jar "$NEW_JAR" --version)"
         local ATTEMPTS=0
         until [[ "$IS_VALID_JAR" || "$ATTEMPTS" -gt "5" ]]; do
             rm -f "$NEW_JAR"
             log "download_latest" "Downloaded jar corrupt"
             log "download_latest" "Downloading..."
-            wget "$UPDATE_URL" -O "$NEW_JAR"
+            wget "$UPDATE_URL" -O "$NEW_JAR" 2>&1 | log_stdin "download_latest_wget"
             IS_VALID_JAR="`java -jar $NEW_JAR --version`"
             ATTEMPTS="$((ATTEMPTS + 1))"
         done
@@ -282,6 +266,7 @@ download_latest() {
                 rm -f "$FINAL_JAR"
             fi
             mv -f "$NEW_JAR" "$FINAL_JAR"
+            echo "$LATEST_VERSION" > "$VERSION_FILE"
         else
             log "download_latest" "Downloaded 5 corrupt jars"
             log "download_latest" "Giving up"
@@ -353,27 +338,16 @@ start_server() {
     fi
 }
 
-# Spigot
-spigot_restart() {
-    if [[ "$TMUX" ]]; then
-        local -r TMUX_BAK="$TMUX"
-        unset "TMUX"
-    fi
-    tmux new -ds "${NAME}-restart" "$SCRIPT persistent_start"
-    if [[ "$TMUX_BAK" ]]; then
-        TMUX="$TMUX_BAK"
-    fi
-}
-
 # Internally used start function
 internal_start() {
-    local -r JAR_FILE="${HOME}/${NAME}/jars/spigot.jar"
-    log "internal_start" "Running with jar ${JAR_FILE}, xms ${XMS}, xmx ${XMX}"
+    local -r JAR_FILE="${HOME}/${NAME}/jars/glowstone.jar"
+    log "internal_start" "Running with jar ${JAR_FILE}, xmx ${XMX}"
+    mkdir -p "$SERVER_DIR"
     cd "$SERVER_DIR"
     local -r SERVER_PID="$$"
     echo "$SERVER_PID" > "$PID_FILE"
     log "internal_start" "Starting with pid $SERVER_PID"
-    exec java "-Xms${XMS}" "-Xmx${XMX}" -Xincgc -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=64m -jar "$JAR_FILE" --log-strip-color
+    exec java -jar "$JAR_FILE"
 }
 
 # Stops the server
@@ -433,14 +407,12 @@ cmd_help() {
     echo " disable-script - Disable the check-script"
     if [[ "$1" == "--internal" ]]; then
         echo " ---- Internally used / debug commands ----"
-        echo " update               - Downloads the latest spigot version"
-        echo " current-version      - Gets the current version of the server"
-        echo " latest-version       - Gets the latest spigot version"
+        echo " update               - Downloads the latest glowstone version"
+        echo " current-version      - Gets the current version of the server jar"
+        echo " latest-version       - Gets the latest glowstone version"
         echo " warning-long         - Restart warning long"
         echo " warning-short        - Restart warning short"
-        echo " log-migrate          - Migrates the server log"
         echo " boot                 - Script to run at boot"
-        echo " spigot-restart       - Spigot restart script"
         echo " internal-start       - Internal start script"
         echo " persistent-start     - Waits till the server isn't running, then starts"
         echo " pre-start-actions    - Runs server pre-start actions"
@@ -464,8 +436,6 @@ main() {
             fi ;;
         check-script)
             server_script ;;
-        log-migrate)
-            log_migrate ;;
         warning-short)
             restart_warning_short ;;
         warning-long)
@@ -504,8 +474,6 @@ main() {
             kill_start ;;
         start-server)
             start_server ;;
-        spigot-restart)
-            spigot_restart ;;
         internal-start)
             internal_start ;;
         stop-server)
