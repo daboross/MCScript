@@ -393,9 +393,9 @@ cmd_help() {
     echo " ---- mc - ${NAME} ----"
     echo " status         - Gives the server's status"
     echo " resume         - Resumes the server session"
-    echo " start-server   - Starts the server"
-    echo " stop-server    - Stops the server"
-    echo " stop-start     - Stops the server, then starts it"
+    echo " start          - Starts the server"
+    echo " stop           - Stops the server"
+    echo " restart        - Stops the server, then starts it"
     echo " kill-server    - Kills the server"
     echo " kill-start     - Kills the server then starts it"
     echo " view-log       - Views the script log"
@@ -472,14 +472,14 @@ main() {
             persistent-start ;;
         kill-start)
             kill_start ;;
-        start-server)
+        start)
             start_server ;;
+        stop)
+            stop_server ;;
+        restart)
+            stop_start ;;
         internal-start)
             internal_start ;;
-        stop-server)
-            stop_server ;;
-        stop-start)
-            stop_start ;;
         view-log)
             view_log ;;
         tell-server)

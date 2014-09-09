@@ -1,10 +1,8 @@
 MCScript
 ========
 
-Minecraft server management script.
+MCScript is a Minecraft server management script, written in bash.
 
-`mc.sh` is a Glowstone server script.
+You can download the script, then simply run `./glowstone.sh start` to create a server directory, download the latest Glowstone build, and run the server inside a tmux session.
 
-It is written in bash, and contains a handful of functions.
-
-You can put them where ever you want, and configure it with the variables in the top of the script. I generally have one script per server.
+The configuration for what directories to use is done with variables at the top of the script. If you want to run multiple servers, you can create copies of glowstone.sh for each server.
